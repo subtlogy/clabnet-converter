@@ -1,0 +1,11 @@
+name: my-lab
+topology:
+  nodes:
+    node1:
+      kind: cisco_cat9kv
+      image: vrnetlab/cisco_cat9kv:17.12.01p
+      raw_config: conf_samples/n1.cfg
+    node2:
+      kind: cisco_n9kv
+      image: vrnetlab/cisco_n9kv:9300-10.5.3
+      raw_config: conf_samples/n2.cfg
