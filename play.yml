@@ -1,0 +1,38 @@
+---
+- name: Push configs to all Cisco devices
+  hosts: cisco_cat9kv,cisco_n9kv
+  gather_facts: no
+  connection: network_cli
+
+  vars:
+    # Strip "clab-${LAB_NAME}-" prefix to get node name for config file lookup
+    cfg_basename: "{{ inventory_hostname | regex_replace('^clab-' + lookup('env', 'LAB_NAME') + '-', '') }}"
+    config_file: "{{ playbook_dir }}/new_configs/{{ cfg_basename }}.cfg"
+
+  tasks:
+    - name: Wait until SSH is up
+      wait_for:
+        host: "{{ ansible_host }}"
+        port: 22
+        state: started
+        timeout: 300
+
+    - name: Load device config from file and push
+      block:
+        - name: Push config for Cat9kv (IOS)
+          cisco.ios.ios_config:
+            src: "{{ config_file }}"
+            match: exact
+            replace: block
+            save_when: modified
+            diff_against: running
+          when: "'cisco_cat9kv' in group_names"
+
+        - name: Push config for N9kv (NXOS)
+          cisco.nxos.nxos_config:
+            src: "{{ config_file }}"
+            match: exact
+            replace: block
+            save_when: modified
+            diff_against: running
+          when: "'cisco_n9kv' in group_names"
